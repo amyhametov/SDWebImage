@@ -119,4 +119,9 @@ extern NSString * _Nonnull const SDWebImageDownloadFinishNotification;
  */
 - (BOOL)cancel:(nullable id)token;
 
+@property (nonatomic, readonly) NSInteger ttfb;
+@property (nonatomic, readonly) NSInteger latency;
+@property (nonatomic, readonly, nullable) NSError *error;
+@property (readonly) NSInteger statusCode;
+
 @end

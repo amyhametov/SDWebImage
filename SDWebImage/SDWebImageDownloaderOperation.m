@@ -23,7 +23,11 @@ static NSString *const kCompletedCallbackKey = @"completed";
 
 typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
 
-@interface SDWebImageDownloaderOperation ()
+@interface SDWebImageDownloaderOperation () {
+    NSDate *startTime;
+    NSDate *responseTime;
+    NSDate *finishTime;
+}
 
 @property (strong, nonatomic, nonnull) NSMutableArray<SDCallbacksDictionary *> *callbackBlocks;
 
@@ -44,6 +48,9 @@ typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
 #if SD_UIKIT
 @property (assign, nonatomic) UIBackgroundTaskIdentifier backgroundTaskId;
 #endif
+
+@property (strong, nonatomic) NSError *error;
+@property (nonatomic) NSInteger statusCode;
 
 @end
 
@@ -164,6 +171,7 @@ typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
         self.executing = YES;
     }
     
+    startTime = [NSDate date];
     [self.dataTask resume];
 
     if (self.dataTask) {
@@ -174,7 +182,8 @@ typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
             [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStartNotification object:self];
         });
     } else {
-        [self callCompletionBlocksWithError:[NSError errorWithDomain:NSURLErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey : @"Connection can't be initialized"}]];
+        self.error = [NSError errorWithDomain:NSURLErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey : @"Connection can't be initialized"}];
+        [self callCompletionBlocksWithError:self.error];
     }
 
 #if SD_UIKIT
@@ -256,6 +265,12 @@ typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
 didReceiveResponse:(NSURLResponse *)response
  completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
     
+    responseTime = [NSDate date];
+    
+    if ([response isMemberOfClass:[NSHTTPURLResponse class]]) {
+        self.statusCode = [((NSHTTPURLResponse *)response) statusCode];
+    }
+    
     //'304 Not Modified' is an exceptional one
     if (![response respondsToSelector:@selector(statusCode)] || (((NSHTTPURLResponse *)response).statusCode < 400 && ((NSHTTPURLResponse *)response).statusCode != 304)) {
         NSInteger expected = (NSInteger)response.expectedContentLength;
@@ -281,11 +296,12 @@ didReceiveResponse:(NSURLResponse *)response
         } else {
             [self.dataTask cancel];
         }
+        self.error = [NSError errorWithDomain:NSURLErrorDomain code:code userInfo:nil];
         dispatch_async(dispatch_get_main_queue(), ^{
             [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloadStopNotification object:nil];
         });
         
-        [self callCompletionBlocksWithError:[NSError errorWithDomain:NSURLErrorDomain code:((NSHTTPURLResponse *)response).statusCode userInfo:nil]];
+        [self callCompletionBlocksWithError:self.error];
 
         [self done];
     }
@@ -401,6 +417,7 @@ didReceiveResponse:(NSURLResponse *)response
 #pragma mark NSURLSessionTaskDelegate
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error {
+    finishTime = [NSDate date];
     @synchronized(self) {
         self.dataTask = nil;
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -412,6 +429,7 @@ didReceiveResponse:(NSURLResponse *)response
     }
     
     if (error) {
+        self.error = error;
         [self callCompletionBlocksWithError:error];
     } else {
         if ([self callbacksForKey:kCompletedCallbackKey].count > 0) {
@@ -537,6 +555,23 @@ didReceiveResponse:(NSURLResponse *)response
             completedBlock(image, imageData, error, finished);
         }
     });
+}
+
+#pragma mark - Other
+
+- (NSInteger) ttfb {
+    if (startTime == nil || responseTime == nil) {
+        return -1;
+    }
+    
+    return (NSUInteger)((responseTime.timeIntervalSinceReferenceDate - startTime.timeIntervalSinceReferenceDate) * 1000);
+}
+
+- (NSInteger) latency {
+    if (startTime == nil || finishTime == nil) {
+        return -1;
+    }
+    return (NSUInteger)((finishTime.timeIntervalSinceReferenceDate - startTime.timeIntervalSinceReferenceDate) * 1000);
 }
 
 @end
