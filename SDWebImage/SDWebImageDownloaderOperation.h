@@ -121,6 +121,7 @@ extern NSString * _Nonnull const SDWebImageDownloadFinishNotification;
 
 @property (nonatomic, readonly) NSInteger ttfb;
 @property (nonatomic, readonly) NSInteger latency;
+@property (nonatomic, readonly) NSInteger waiting_in_queue;
 @property (nonatomic, readonly, nullable) NSError *error;
 @property (readonly) NSInteger statusCode;
 

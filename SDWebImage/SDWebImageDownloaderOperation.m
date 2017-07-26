@@ -24,6 +24,7 @@ static NSString *const kCompletedCallbackKey = @"completed";
 typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
 
 @interface SDWebImageDownloaderOperation () {
+    NSDate *initTime;
     NSDate *startTime;
     NSDate *responseTime;
     NSDate *finishTime;
@@ -81,6 +82,7 @@ typedef NSMutableDictionary<NSString *, id> SDCallbacksDictionary;
         _expectedSize = 0;
         _unownedSession = session;
         _barrierQueue = dispatch_queue_create("com.hackemist.SDWebImageDownloaderOperationBarrierQueue", DISPATCH_QUEUE_CONCURRENT);
+        initTime = [NSDate date];
     }
     return self;
 }
@@ -572,6 +574,13 @@ didReceiveResponse:(NSURLResponse *)response
         return -1;
     }
     return (NSUInteger)((finishTime.timeIntervalSinceReferenceDate - startTime.timeIntervalSinceReferenceDate) * 1000);
+}
+
+- (NSInteger) waiting_in_queue {
+    if (startTime == nil || initTime == nil) {
+        return -1;
+    }
+    return (NSUInteger)((startTime.timeIntervalSinceReferenceDate - initTime.timeIntervalSinceReferenceDate) * 1000);
 }
 
 @end
