@@ -136,12 +136,7 @@
     self.skippedCount = 0;
     self.requestedCount = 0;
     self.finishedCount = 0;
-    self.completionBlock = nil;
-    self.progressBlock = nil;
-    self.delegate = nil;
     [self.manager cancelAll];
-    self.manager = nil;
-    self.prefetcherQueue = nil;
 }
 
 @end
