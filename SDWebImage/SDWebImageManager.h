@@ -240,6 +240,11 @@ SDWebImageManager *manager = [SDWebImageManager sharedManager];
 - (void)cancelAll;
 
 /**
+ * Cancel current operations for urls
+ */
+- (void)cancelURLs:(NSArray<NSString *> *_Nonnull)urls;
+
+/**
  * Check one or more operations running
  */
 - (BOOL)isRunning;

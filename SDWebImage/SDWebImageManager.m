@@ -15,6 +15,7 @@
 @property (assign, nonatomic, getter = isCancelled) BOOL cancelled;
 @property (copy, nonatomic, nullable) SDWebImageNoParamsBlock cancelBlock;
 @property (strong, nonatomic, nullable) NSOperation *cacheOperation;
+@property (strong, nonatomic, nullable) NSString *url;
 
 @end
 
@@ -264,6 +265,22 @@
     @synchronized (self.runningOperations) {
         NSArray<SDWebImageCombinedOperation *> *copiedOperations = [self.runningOperations copy];
         [copiedOperations makeObjectsPerformSelector:@selector(cancel)];
+        [self.runningOperations removeObjectsInArray:copiedOperations];
+    }
+}
+
+- (void)cancelURLs:(NSArray<NSString *> *)urls {
+    @synchronized (self.runningOperations) {
+        NSArray<SDWebImageCombinedOperation *> *copiedOperations = [self.runningOperations copy];
+        [copiedOperations makeObjectsPerformSelector:@selector(cancel)];
+        [copiedOperations enumerateObjectsUsingBlock:^(SDWebImageCombinedOperation * _Nonnull operation, NSUInteger i, BOOL * _Nonnull stopMain) {
+            [urls enumerateObjectsUsingBlock:^(NSString * _Nonnull url, NSUInteger j, BOOL * _Nonnull stop) {
+                if ([operation.url isEqualToString:url]) {
+                    [operation performSelector:@selector(cancel)];
+                    stop = YES;
+                }
+            }];
+        }];
         [self.runningOperations removeObjectsInArray:copiedOperations];
     }
 }
