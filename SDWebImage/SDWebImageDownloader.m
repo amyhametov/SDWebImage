@@ -11,6 +11,7 @@
 #import <ImageIO/ImageIO.h>
 
 NSString *const SDWebImageDownloadOperationCompleteNotification = @"SDWebImageDownloadOperationComplete";
+NSString *const SDWebImageDownloaderDidFinishCollectingMetricsNotification = @"SDWebImageDownloaderDidFinishCollectingMetrics";
 
 @implementation SDWebImageDownloadToken
 @end
@@ -311,6 +312,10 @@ didReceiveResponse:(NSURLResponse *)response
     SDWebImageDownloaderOperation *dataOperation = [self operationWithTask:task];
 
     [dataOperation URLSession:session task:task didCompleteWithError:error];
+}
+
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics {
+    [[NSNotificationCenter defaultCenter] postNotificationName:SDWebImageDownloaderDidFinishCollectingMetricsNotification object:metrics];
 }
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task willPerformHTTPRedirection:(NSHTTPURLResponse *)response newRequest:(NSURLRequest *)request completionHandler:(void (^)(NSURLRequest * _Nullable))completionHandler {

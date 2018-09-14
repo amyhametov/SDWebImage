@@ -73,6 +73,8 @@ extern NSString * _Nonnull const SDWebImageDownloadStopNotification;
 
 extern NSString * _Nonnull const SDWebImageDownloadOperationCompleteNotification;
 
+extern NSString * _Nonnull const SDWebImageDownloaderDidFinishCollectingMetricsNotification;
+
 typedef void(^SDWebImageDownloaderProgressBlock)(NSInteger receivedSize, NSInteger expectedSize, NSURL * _Nullable targetURL);
 
 typedef void(^SDWebImageDownloaderCompletedBlock)(UIImage * _Nullable image, NSData * _Nullable data, NSError * _Nullable error, BOOL finished);
