@@ -245,8 +245,8 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
     }
 }
 
-- (void)storeImageDataToDisk:(nullable NSData *)imageData forKey:(nullable NSString *)key {
-    if (!imageData || !key) {
+- (void)storeImageDataToDisk:(nullable NSData *)imageData fromFileUrl:(nullable NSURL*)fromFileUrl forKey:(nullable NSString *)key {
+    if ((!imageData && !fromFileUrl) || !key) {
         return;
     }
     
@@ -261,12 +261,24 @@ FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
     // transform to NSUrl
     NSURL *fileURL = [NSURL fileURLWithPath:cachePathForKey];
     
-    [_fileManager createFileAtPath:cachePathForKey contents:imageData attributes:nil];
+    if (imageData) {
+        [_fileManager createFileAtPath:cachePathForKey contents:imageData attributes:nil];
+    } else if (fromFileUrl) {
+        [_fileManager copyItemAtURL:fromFileUrl toURL:fileURL error:nil];
+    }
     
     // disable iCloud backup
     if (self.config.shouldDisableiCloud) {
         [fileURL setResourceValue:@YES forKey:NSURLIsExcludedFromBackupKey error:nil];
     }
+}
+
+- (void)storeImageDataToDisk:(nullable NSData *)imageData forKey:(nullable NSString *)key {
+    [self storeImageDataToDisk:imageData fromFileUrl:nil forKey:key];
+}
+
+- (void)storeImageDataToDiskFromFileUrl:(nonnull NSURL*)fileUrl forKey:(nullable NSString *)key {
+    [self storeImageDataToDisk:nil fromFileUrl:fileUrl forKey:key];
 }
 
 #pragma mark - Query and Retrieve Ops
