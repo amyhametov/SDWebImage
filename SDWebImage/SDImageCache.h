@@ -271,4 +271,11 @@ typedef void(^SDWebImageCalculateSizeBlock)(NSUInteger fileCount, NSUInteger tot
  */
 - (nullable NSString *)defaultCachePathForKey:(nullable NSString *)key;
 
+/**
+ *  Default cache path for cache
+ *
+ *  @return the default cache path
+ */
+@property (readonly, nonnull) NSString *diskCachePath;
+
 @end
